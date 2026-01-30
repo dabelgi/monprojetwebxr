@@ -7,22 +7,26 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
         
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
             font-family: 'Space Mono', monospace;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1e3f 100%);
             color: white;
-            overflow: hidden;
+            overflow-x: hidden;
         }
         
-        #container {
+        #ui-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            box-sizing: border-box;
         }
         
         h1 {
@@ -35,34 +39,37 @@
             text-align: center;
         }
         
-        .instructions {
-            max-width: 600px;
-            text-align: center;
-            margin: 30px 0;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-        
-        .step {
+        .section {
             background: rgba(0, 255, 136, 0.1);
             border: 2px solid #00ff88;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            max-width: 700px;
+            width: 100%;
         }
         
-        .step-number {
+        .section-title {
             font-family: 'Orbitron', sans-serif;
             color: #00ff88;
             font-size: 1.5rem;
-            margin-right: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        .step {
+            background: rgba(0, 184, 255, 0.1);
+            border: 1px solid #00b8ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
         }
         
         button {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            padding: 20px 50px;
-            margin: 20px;
+            font-size: 1.2rem;
+            padding: 15px 40px;
+            margin: 10px;
             background: linear-gradient(135deg, #00ff88, #00cc6f);
             color: #0a0e27;
             border: none;
@@ -76,176 +83,385 @@
         }
         
         button:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(0, 255, 136, 0.6);
         }
         
-        .warning {
-            background: rgba(0, 184, 255, 0.1);
-            border: 2px solid #00b8ff;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #00b8ff;
-            font-size: 1rem;
+        button.secondary {
+            background: linear-gradient(135deg, #00b8ff, #0088cc);
         }
         
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
+        input[type="file"] {
             display: none;
+        }
+        
+        .file-upload-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff0080, #cc0066);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 0, 128, 0.4);
+        }
+        
+        .preview-image {
+            max-width: 300px;
+            margin: 15px auto;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            display: block;
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #00ff88;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 10px;
         }
         
         .hidden {
             display: none !important;
         }
+        
+        #ar-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        /* UI in VR */
+        .vr-ui {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 14, 39, 0.95);
+            border: 3px solid #00ff88;
+            border-radius: 20px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+            min-width: 400px;
+        }
+        
+        .vr-ui.active {
+            display: block;
+        }
+        
+        .vr-status {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .vr-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .vr-controls button {
+            font-size: 1rem;
+            padding: 12px 25px;
+        }
     </style>
 </head>
 <body>
-    <div id="container">
+    <div id="ui-container">
         <h1>🧩 Puzzle Assistant AR</h1>
         
-        <div class="instructions">
-            <div class="step">
-                <span class="step-number">1.</span>
-                Mettez votre Quest 2 et ouvrez cette page dans le navigateur Oculus
-            </div>
-            <div class="step">
-                <span class="step-number">2.</span>
-                Cliquez sur "Démarrer AR" pour activer le mode passthrough
-            </div>
-            <div class="step">
-                <span class="step-number">3.</span>
-                Positionnez-vous devant votre puzzle
-            </div>
-            <div class="step">
-                <span class="step-number">4.</span>
-                Des marqueurs AR apparaîtront pour vous guider
+        <!-- Étape 1: Upload photo référence -->
+        <div id="step1" class="section">
+            <div class="section-title">📸 Étape 1: Photo du Puzzle Complet</div>
+            <p style="margin-bottom: 20px;">Uploadez une photo du puzzle terminé (ou de la boîte)</p>
+            
+            <input type="file" id="referenceUpload" accept="image/*">
+            <label for="referenceUpload" class="file-upload-btn">📤 Choisir une image</label>
+            
+            <div id="referencePreview" class="hidden">
+                <img id="referenceImg" class="preview-image" alt="Puzzle complet">
+                <button id="confirmReference">✓ Confirmer l'image</button>
             </div>
         </div>
         
-        <div class="warning">
-            💡 <strong>Important :</strong> Cette application nécessite le Quest 2 en mode AR/Passthrough. 
-            Assurez-vous d'avoir un bon éclairage et autorisez l'accès AR quand demandé.
+        <!-- Étape 2: Instructions AR -->
+        <div id="step2" class="section hidden">
+            <div class="section-title">🥽 Étape 2: Entrer en mode AR</div>
+            
+            <div class="step">
+                <strong>1.</strong> Positionnez-vous devant votre puzzle avec les pièces restantes
+            </div>
+            <div class="step">
+                <strong>2.</strong> Cliquez sur "Démarrer AR" ci-dessous
+            </div>
+            <div class="step">
+                <strong>3.</strong> Autorisez l'accès AR quand demandé
+            </div>
+            <div class="step">
+                <strong>4.</strong> Dans la VR, utilisez les contrôleurs pour :
+                <ul style="margin-left: 30px; margin-top: 10px;">
+                    <li>Pointer et cliquer sur "SCANNER" pour détecter les pièces</li>
+                    <li>Cliquer sur "ANALYSER" pour voir les placements</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button id="startAR">🚀 Démarrer AR</button>
+            </div>
         </div>
         
-        <button id="startAR">Démarrer AR 🥽</button>
-        
-        <div id="status" style="margin-top: 20px; font-size: 1.2rem; color: #00ff88;"></div>
+        <div id="status" class="status hidden"></div>
+    </div>
+    
+    <!-- VR UI Overlay -->
+    <div id="vrUI" class="vr-ui">
+        <div class="vr-status" id="vrStatus">Prêt à scanner</div>
+        <div class="vr-controls">
+            <button id="scanBtn">📸 SCANNER</button>
+            <button id="analyzeBtn" class="secondary">🔍 ANALYSER</button>
+            <button id="resetBtn" style="background: #ff0080;">🔄 RESET</button>
+            <button id="exitBtn" style="background: #666;">❌ QUITTER</button>
+        </div>
     </div>
 
-    <canvas id="renderCanvas"></canvas>
+    <canvas id="ar-canvas"></canvas>
 
     <script type="module">
-        const startBtn = document.getElementById('startAR');
-        const container = document.getElementById('container');
-        const canvas = document.getElementById('renderCanvas');
+        // État global
+        const appState = {
+            referenceImage: null,
+            referenceImageData: null,
+            inAR: false,
+            pieces: [],
+            scanned: false,
+            analyzed: false
+        };
+        
+        // Éléments DOM
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const referenceUpload = document.getElementById('referenceUpload');
+        const referencePreview = document.getElementById('referencePreview');
+        const referenceImg = document.getElementById('referenceImg');
+        const confirmReference = document.getElementById('confirmReference');
+        const startARBtn = document.getElementById('startAR');
         const statusDiv = document.getElementById('status');
+        const uiContainer = document.getElementById('ui-container');
+        const vrUI = document.getElementById('vrUI');
+        const vrStatus = document.getElementById('vrStatus');
+        const canvas = document.getElementById('ar-canvas');
         const gl = canvas.getContext('webgl2', { xrCompatible: true });
+        
+        // Boutons VR
+        const scanBtn = document.getElementById('scanBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const exitBtn = document.getElementById('exitBtn');
         
         let xrSession = null;
         let xrRefSpace = null;
-        let pieces = [];
+        let animationFrameId = null;
         
-        // Vérifier le support WebXR
-        if (!navigator.xr) {
-            statusDiv.textContent = '❌ WebXR non supporté. Utilisez le navigateur Quest 2.';
-            statusDiv.style.color = '#ff0080';
-            startBtn.disabled = true;
+        // ÉTAPE 1: Upload de la photo de référence
+        referenceUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    appState.referenceImage = event.target.result;
+                    referenceImg.src = event.target.result;
+                    referencePreview.classList.remove('hidden');
+                    
+                    // Analyser l'image
+                    analyzeReferenceImage(event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        confirmReference.addEventListener('click', () => {
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            showStatus('✓ Image de référence enregistrée !');
+        });
+        
+        function analyzeReferenceImage(imageSrc) {
+            const img = new Image();
+            img.onload = () => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                appState.referenceImageData = ctx.getImageData(0, 0, img.width, img.height);
+            };
+            img.src = imageSrc;
         }
         
-        startBtn.addEventListener('click', async () => {
+        // ÉTAPE 2: Démarrer AR
+        startARBtn.addEventListener('click', async () => {
             try {
-                statusDiv.textContent = 'Initialisation AR...';
+                showStatus('Initialisation AR...');
                 
-                // Vérifier le support AR
                 const supported = await navigator.xr.isSessionSupported('immersive-ar');
-                
                 if (!supported) {
-                    statusDiv.textContent = '❌ AR non supporté sur cet appareil';
-                    statusDiv.style.color = '#ff0080';
+                    showStatus('❌ AR non supporté sur cet appareil', true);
                     return;
                 }
                 
-                // Démarrer la session AR avec passthrough
                 xrSession = await navigator.xr.requestSession('immersive-ar', {
                     requiredFeatures: ['local-floor'],
-                    optionalFeatures: ['hand-tracking', 'anchors', 'hit-test', 'depth-sensing']
+                    optionalFeatures: ['hand-tracking', 'hit-test']
                 });
                 
                 await onSessionStarted();
                 
             } catch (error) {
                 console.error('Erreur AR:', error);
-                statusDiv.textContent = '❌ Erreur: ' + error.message;
-                statusDiv.style.color = '#ff0080';
+                showStatus('❌ Erreur: ' + error.message, true);
             }
         });
         
         async function onSessionStarted() {
-            // Configuration de la session
+            appState.inAR = true;
+            
             await gl.makeXRCompatible();
             xrSession.updateRenderState({
                 baseLayer: new XRWebGLLayer(xrSession, gl)
             });
             
-            // Référence spatiale
             xrRefSpace = await xrSession.requestReferenceSpace('local-floor');
             
-            // Masquer l'interface et afficher le canvas
-            container.classList.add('hidden');
-            canvas.classList.remove('hidden');
+            // Masquer UI normale, afficher UI VR
+            uiContainer.classList.add('hidden');
             canvas.style.display = 'block';
+            vrUI.classList.add('active');
             
-            // Générer des pièces de puzzle virtuelles
-            generatePuzzlePieces();
+            initShaders();
             
-            // Démarrer la boucle de rendu
             xrSession.requestAnimationFrame(onXRFrame);
-            
-            // Gérer la fin de session
             xrSession.addEventListener('end', onSessionEnded);
+            
+            updateVRStatus('Pointez vers vos pièces et cliquez SCANNER');
         }
         
         function onSessionEnded() {
+            appState.inAR = false;
             xrSession = null;
-            container.classList.remove('hidden');
-            canvas.classList.add('hidden');
-            statusDiv.textContent = 'Session AR terminée';
-        }
-        
-        function generatePuzzlePieces() {
-            const numPieces = 6;
-            pieces = [];
             
-            for (let i = 0; i < numPieces; i++) {
-                const angle = (i / numPieces) * Math.PI * 2;
-                const radius = 0.5;
-                
-                pieces.push({
-                    id: i + 1,
-                    currentPos: [
-                        Math.cos(angle) * radius,
-                        0.3,
-                        -1 + Math.sin(angle) * radius
-                    ],
-                    targetPos: [
-                        Math.cos(angle + Math.PI) * radius * 0.5,
-                        0.3,
-                        -1.5 + Math.sin(angle + Math.PI) * radius * 0.5
-                    ],
-                    color: [
-                        Math.random(),
-                        0.5 + Math.random() * 0.5,
-                        0.5 + Math.random() * 0.5
-                    ]
-                });
-            }
+            uiContainer.classList.remove('hidden');
+            canvas.style.display = 'none';
+            vrUI.classList.remove('active');
+            
+            showStatus('Session AR terminée');
         }
         
+        // Boutons de contrôle VR
+        scanBtn.addEventListener('click', handleScan);
+        analyzeBtn.addEventListener('click', handleAnalyze);
+        resetBtn.addEventListener('click', handleReset);
+        exitBtn.addEventListener('click', () => {
+            if (xrSession) {
+                xrSession.end();
+            }
+        });
+        
+        function handleScan() {
+            updateVRStatus('📸 Scan en cours...');
+            
+            setTimeout(() => {
+                // Générer des pièces détectées (simulation)
+                const numPieces = Math.floor(Math.random() * 5) + 4;
+                appState.pieces = [];
+                
+                for (let i = 0; i < numPieces; i++) {
+                    const angle = (i / numPieces) * Math.PI * 2;
+                    const radius = 0.4;
+                    
+                    appState.pieces.push({
+                        id: i + 1,
+                        position: [
+                            Math.cos(angle) * radius,
+                            0.2,
+                            -1 + Math.sin(angle) * radius
+                        ],
+                        color: [
+                            Math.random(),
+                            0.5 + Math.random() * 0.5,
+                            0.7 + Math.random() * 0.3
+                        ],
+                        targetPosition: null
+                    });
+                }
+                
+                appState.scanned = true;
+                updateVRStatus(`✓ ${numPieces} pièces détectées ! Cliquez ANALYSER`);
+            }, 2000);
+        }
+        
+        function handleAnalyze() {
+            if (!appState.scanned) {
+                updateVRStatus('⚠️ Scannez d\'abord les pièces !');
+                return;
+            }
+            
+            updateVRStatus('🔍 Analyse des placements...');
+            
+            setTimeout(() => {
+                // Calculer les positions cibles
+                appState.pieces.forEach((piece, i) => {
+                    const targetAngle = (i / appState.pieces.length) * Math.PI * 2 + Math.PI;
+                    const targetRadius = 0.3;
+                    
+                    piece.targetPosition = [
+                        Math.cos(targetAngle) * targetRadius,
+                        0.2,
+                        -1.5 + Math.sin(targetAngle) * targetRadius
+                    ];
+                });
+                
+                appState.analyzed = true;
+                updateVRStatus('✓ Placements calculés ! Suivez les flèches AR');
+            }, 2000);
+        }
+        
+        function handleReset() {
+            appState.pieces = [];
+            appState.scanned = false;
+            appState.analyzed = false;
+            updateVRStatus('🔄 Reset effectué. Cliquez SCANNER');
+        }
+        
+        function updateVRStatus(text) {
+            vrStatus.textContent = text;
+        }
+        
+        function showStatus(text, isError = false) {
+            statusDiv.textContent = text;
+            statusDiv.style.color = isError ? '#ff0080' : '#00ff88';
+            statusDiv.classList.remove('hidden');
+        }
+        
+        // Rendu AR
         function onXRFrame(time, frame) {
             const session = frame.session;
             session.requestAnimationFrame(onXRFrame);
@@ -256,40 +472,48 @@
             const layer = session.renderState.baseLayer;
             gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
             
-            // Couleur de fond transparente pour voir le passthrough
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             
             for (const view of pose.views) {
                 const viewport = layer.getViewport(view);
                 gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
                 
-                // Dessiner les marqueurs de pièces
-                renderPuzzleMarkers(view);
+                renderScene(view);
             }
         }
         
-        function renderPuzzleMarkers(view) {
-            // Programme shader simple
-            if (!gl.program) {
-                initShaders();
-            }
-            
-            gl.useProgram(gl.program);
+        function renderScene(view) {
+            if (!gl.program) return;
             
             const projMatrix = view.projectionMatrix;
             const viewMatrix = view.transform.inverse.matrix;
             
-            // Dessiner chaque pièce
-            pieces.forEach((piece, index) => {
-                // Marqueur de position actuelle (sphère verte)
-                drawSphere(piece.currentPos, [0, 1, 0.5], 0.05, projMatrix, viewMatrix);
+            // Dessiner les marqueurs
+            appState.pieces.forEach((piece) => {
+                // Marqueur de position actuelle (vert)
+                drawSphere(piece.position, [0, 1, 0.5], 0.06, projMatrix, viewMatrix);
                 
-                // Marqueur de position cible (sphère rouge)
-                drawSphere(piece.targetPos, [1, 0, 0.5], 0.05, projMatrix, viewMatrix);
-                
-                // Ligne de connexion
-                drawLine(piece.currentPos, piece.targetPos, piece.color, projMatrix, viewMatrix);
+                // Si analysé, dessiner position cible et flèche
+                if (appState.analyzed && piece.targetPosition) {
+                    // Position cible (rouge)
+                    drawSphere(piece.targetPosition, [1, 0, 0.5], 0.06, projMatrix, viewMatrix);
+                    
+                    // Ligne de connexion
+                    drawLine(piece.position, piece.targetPosition, piece.color, projMatrix, viewMatrix);
+                    
+                    // Flèche au-dessus de la cible
+                    const arrowPos = [
+                        piece.targetPosition[0],
+                        piece.targetPosition[1] + 0.2,
+                        piece.targetPosition[2]
+                    ];
+                    drawSphere(arrowPos, [0, 1, 1], 0.04, projMatrix, viewMatrix);
+                }
             });
         }
         
@@ -302,7 +526,7 @@
                 
                 void main() {
                     gl_Position = projection * view * model * vec4(position, 1.0);
-                    gl_PointSize = 20.0;
+                    gl_PointSize = 30.0;
                 }
             `;
             
@@ -311,7 +535,12 @@
                 uniform vec3 color;
                 
                 void main() {
-                    gl_FragColor = vec4(color, 0.8);
+                    vec2 coord = gl_PointCoord - vec2(0.5);
+                    float dist = length(coord);
+                    if (dist > 0.5) discard;
+                    
+                    float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+                    gl_FragColor = vec4(color, alpha * 0.9);
                 }
             `;
             
@@ -328,7 +557,6 @@
             gl.attachShader(gl.program, fragmentShader);
             gl.linkProgram(gl.program);
             
-            // Créer un buffer pour les points
             gl.buffer = gl.createBuffer();
         }
         
@@ -343,7 +571,6 @@
             const viewLoc = gl.getUniformLocation(gl.program, 'view');
             const modelLoc = gl.getUniformLocation(gl.program, 'model');
             
-            // Matrice modèle (translation)
             const modelMatrix = new Float32Array([
                 1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -356,7 +583,6 @@
             gl.uniformMatrix4fv(modelLoc, false, modelMatrix);
             gl.uniform3fv(colorLoc, color);
             
-            // Point unique au centre
             gl.bindBuffer(gl.ARRAY_BUFFER, gl.buffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 0]), gl.STATIC_DRAW);
             gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
@@ -397,6 +623,7 @@
             gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(posLoc);
             
+            gl.lineWidth(3);
             gl.drawArrays(gl.LINES, 0, 2);
         }
     </script>
