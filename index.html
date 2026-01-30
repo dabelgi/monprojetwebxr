@@ -2,834 +2,403 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Puzzle Assistant Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Assistant AR - Quest 2</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #00ff88;
-            --secondary: #ff0080;
-            --accent: #00b8ff;
-            --dark: #0a0e27;
-            --darker: #050814;
-            --light: #ffffff;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glow: 0 0 20px rgba(0, 255, 136, 0.3);
-        }
-        
         body {
+            margin: 0;
             font-family: 'Space Mono', monospace;
-            background: var(--darker);
-            color: var(--light);
-            overflow-x: hidden;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1e3f 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            position: relative;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(0, 136, 255, 0.1) 0%, transparent 50%);
-            animation: bgShift 15s ease-in-out infinite;
-            z-index: 0;
-        }
-        
-        @keyframes bgShift {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(5deg); }
-        }
-        
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 100%;
             padding: 20px;
-            min-height: 100vh;
-        }
-        
-        header {
-            text-align: center;
-            padding: 30px 0;
-            animation: slideDown 0.6s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            box-sizing: border-box;
         }
         
         h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            font-size: 3rem;
+            background: linear-gradient(135deg, #00ff88, #00b8ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            text-shadow: var(--glow);
-            animation: textGlow 3s ease-in-out infinite;
+            margin-bottom: 30px;
+            text-align: center;
         }
         
-        @keyframes textGlow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
-        }
-        
-        .subtitle {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 2px;
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-            animation: fadeIn 0.8s ease-out;
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            margin: 30px 0;
+            line-height: 1.8;
+            font-size: 1.1rem;
         }
         
         .step {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--glass);
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .step-number {
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-        
-        .step.active {
-            background: var(--primary);
-            color: var(--dark);
-            border-color: var(--primary);
-            box-shadow: var(--glow);
-            transform: scale(1.2);
-        }
-        
-        .step.completed {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: var(--primary);
-        }
-        
-        .camera-section {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 20px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: var(--glow);
-            animation: fadeIn 0.8s ease-out 0.2s both;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        
-        .section-title {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--primary);
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .video-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            border-radius: 15px;
-            overflow: hidden;
-            background: var(--darker);
-            border: 2px solid var(--primary);
-            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2);
-        }
-        
-        #video, #canvas, #referenceCanvas, #piecesCanvas {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        #canvas, #referenceCanvas, #piecesCanvas {
-            display: none;
-        }
-        
-        .canvas-overlay {
-            position: relative;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-            flex-wrap: wrap;
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-right: 10px;
         }
         
         button {
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            padding: 15px 30px;
+            font-size: 1.5rem;
+            padding: 20px 50px;
+            margin: 20px;
+            background: linear-gradient(135deg, #00ff88, #00cc6f);
+            color: #0a0e27;
             border: none;
             border-radius: 50px;
-            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
         }
         
-        button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        button:active::before {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), #00cc6f);
-            color: var(--dark);
-            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.6);
-        }
-        
-        .btn-secondary {
-            background: var(--glass);
-            color: var(--light);
-            border: 2px solid var(--primary);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(0, 255, 136, 0.1);
-            transform: translateY(-3px);
-        }
-        
-        .btn-accent {
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            color: var(--light);
-            box-shadow: 0 5px 20px rgba(0, 184, 255, 0.4);
-        }
-        
-        .btn-accent:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 184, 255, 0.6);
-        }
-        
-        .results {
-            margin-top: 30px;
-            animation: fadeIn 0.8s ease-out 0.4s both;
-        }
-        
-        .placement-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .piece-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 15px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .piece-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
-            transition: left 0.5s;
-        }
-        
-        .piece-card:hover::before {
-            left: 100%;
-        }
-        
-        .piece-card:hover {
+        button:hover {
             transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.6);
         }
         
-        .piece-number {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .piece-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), #00cc6f);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-        
-        .piece-info {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.8;
-            margin: 10px 0;
-        }
-        
-        .piece-info strong {
-            color: var(--primary);
-        }
-        
-        .location-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            color: var(--light);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 700;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .confidence-meter {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
+        .warning {
+            background: rgba(0, 184, 255, 0.1);
+            border: 2px solid #00b8ff;
             border-radius: 10px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        
-        .confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--secondary), var(--primary));
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-        
-        .status {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
             margin: 20px 0;
-            font-weight: 700;
-            animation: pulse 2s ease-in-out infinite;
+            color: #00b8ff;
+            font-size: 1rem;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .status.processing {
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-        
-        .status.error {
-            background: rgba(255, 0, 128, 0.1);
-            color: var(--secondary);
-            border: 1px solid var(--secondary);
-        }
-        
-        .hidden {
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
             display: none;
         }
         
-        .info-box {
-            background: var(--glass);
-            border-left: 4px solid var(--accent);
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            animation: fadeIn 0.8s ease-out 0.6s both;
-        }
-        
-        .info-box p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin: 5px 0;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            margin: 20px auto;
-            border: 3px solid rgba(0, 255, 136, 0.1);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .reference-preview {
-            max-width: 300px;
-            margin: 15px auto;
-            border: 2px solid var(--accent);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0, 184, 255, 0.3);
-        }
-        
-        .reference-preview img {
-            width: 100%;
-            display: block;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.8rem;
-            animation: fadeIn 0.8s ease-out 0.8s both;
-        }
-        
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .controls {
-                flex-direction: column;
-            }
-            
-            button {
-                width: 100%;
-            }
-            
-            .placement-grid {
-                grid-template-columns: 1fr;
-            }
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Puzzle Assistant Pro</h1>
-            <p class="subtitle">Placement intelligent de pièces</p>
-        </header>
+    <div id="container">
+        <h1>🧩 Puzzle Assistant AR</h1>
         
-        <div class="step-indicator">
-            <div class="step active" id="step1">1</div>
-            <div class="step" id="step2">2</div>
-            <div class="step" id="step3">3</div>
-        </div>
-        
-        <!-- Étape 1: Photo de référence -->
-        <div id="referenceSection" class="camera-section">
-            <div class="section-title">📸 Étape 1: Photo de référence</div>
-            <div class="info-box">
-                <p>Prenez une photo du puzzle <strong>complet</strong> ou de la boîte montrant l'image finale</p>
+        <div class="instructions">
+            <div class="step">
+                <span class="step-number">1.</span>
+                Mettez votre Quest 2 et ouvrez cette page dans le navigateur Oculus
             </div>
-            <div class="video-container">
-                <video id="videoRef" autoplay playsinline></video>
-                <canvas id="referenceCanvas"></canvas>
+            <div class="step">
+                <span class="step-number">2.</span>
+                Cliquez sur "Démarrer AR" pour activer le mode passthrough
             </div>
-            <div class="controls">
-                <button id="startRefBtn" class="btn-primary">Démarrer Caméra</button>
-                <button id="captureRefBtn" class="btn-primary hidden">Capturer Référence</button>
-                <button id="confirmRefBtn" class="btn-accent hidden">Confirmer ✓</button>
+            <div class="step">
+                <span class="step-number">3.</span>
+                Positionnez-vous devant votre puzzle
             </div>
-            <div id="statusRef"></div>
-        </div>
-        
-        <!-- Étape 2: Photo des pièces -->
-        <div id="piecesSection" class="camera-section hidden">
-            <div class="section-title">🧩 Étape 2: Photo des pièces restantes</div>
-            <div class="info-box">
-                <p>Photographiez les pièces que vous devez placer</p>
-            </div>
-            <div class="video-container">
-                <video id="videoPieces" autoplay playsinline></video>
-                <canvas id="piecesCanvas"></canvas>
-            </div>
-            <div class="controls">
-                <button id="startPiecesBtn" class="btn-primary">Démarrer Caméra</button>
-                <button id="capturePiecesBtn" class="btn-primary hidden">Capturer Pièces</button>
-                <button id="analyzePiecesBtn" class="btn-accent hidden">Analyser 🔍</button>
-            </div>
-            <div id="statusPieces"></div>
-        </div>
-        
-        <!-- Étape 3: Résultats -->
-        <div id="resultsSection" class="hidden">
-            <div class="camera-section">
-                <div class="section-title">✨ Suggestions de placement</div>
-                <div id="placementResults"></div>
-            </div>
-            
-            <div class="controls">
-                <button id="restartBtn" class="btn-secondary">Recommencer</button>
+            <div class="step">
+                <span class="step-number">4.</span>
+                Des marqueurs AR apparaîtront pour vous guider
             </div>
         </div>
         
-        <footer>
-            <p>Puzzle Assistant Pro v2.0 | Placement intelligent de pièces</p>
-        </footer>
+        <div class="warning">
+            💡 <strong>Important :</strong> Cette application nécessite le Quest 2 en mode AR/Passthrough. 
+            Assurez-vous d'avoir un bon éclairage et autorisez l'accès AR quand demandé.
+        </div>
+        
+        <button id="startAR">Démarrer AR 🥽</button>
+        
+        <div id="status" style="margin-top: 20px; font-size: 1.2rem; color: #00ff88;"></div>
     </div>
 
-    <script>
-        // Variables globales
-        let streamRef = null;
-        let streamPieces = null;
-        let referenceImageData = null;
-        let piecesImageData = null;
+    <canvas id="renderCanvas"></canvas>
+
+    <script type="module">
+        const startBtn = document.getElementById('startAR');
+        const container = document.getElementById('container');
+        const canvas = document.getElementById('renderCanvas');
+        const statusDiv = document.getElementById('status');
+        const gl = canvas.getContext('webgl2', { xrCompatible: true });
         
-        // Éléments DOM
-        const videoRef = document.getElementById('videoRef');
-        const videoPieces = document.getElementById('videoPieces');
-        const canvasRef = document.getElementById('referenceCanvas');
-        const canvasPieces = document.getElementById('piecesCanvas');
-        const ctxRef = canvasRef.getContext('2d');
-        const ctxPieces = canvasPieces.getContext('2d');
+        let xrSession = null;
+        let xrRefSpace = null;
+        let pieces = [];
         
-        const step1 = document.getElementById('step1');
-        const step2 = document.getElementById('step2');
-        const step3 = document.getElementById('step3');
+        // Vérifier le support WebXR
+        if (!navigator.xr) {
+            statusDiv.textContent = '❌ WebXR non supporté. Utilisez le navigateur Quest 2.';
+            statusDiv.style.color = '#ff0080';
+            startBtn.disabled = true;
+        }
         
-        const referenceSection = document.getElementById('referenceSection');
-        const piecesSection = document.getElementById('piecesSection');
-        const resultsSection = document.getElementById('resultsSection');
-        
-        // Boutons
-        const startRefBtn = document.getElementById('startRefBtn');
-        const captureRefBtn = document.getElementById('captureRefBtn');
-        const confirmRefBtn = document.getElementById('confirmRefBtn');
-        
-        const startPiecesBtn = document.getElementById('startPiecesBtn');
-        const capturePiecesBtn = document.getElementById('capturePiecesBtn');
-        const analyzePiecesBtn = document.getElementById('analyzePiecesBtn');
-        
-        const restartBtn = document.getElementById('restartBtn');
-        
-        // Status
-        const statusRef = document.getElementById('statusRef');
-        const statusPieces = document.getElementById('statusPieces');
-        
-        // ÉTAPE 1: Photo de référence
-        startRefBtn.addEventListener('click', async () => {
+        startBtn.addEventListener('click', async () => {
             try {
-                streamRef = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
+                statusDiv.textContent = 'Initialisation AR...';
+                
+                // Vérifier le support AR
+                const supported = await navigator.xr.isSessionSupported('immersive-ar');
+                
+                if (!supported) {
+                    statusDiv.textContent = '❌ AR non supporté sur cet appareil';
+                    statusDiv.style.color = '#ff0080';
+                    return;
+                }
+                
+                // Démarrer la session AR avec passthrough
+                xrSession = await navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['local-floor'],
+                    optionalFeatures: ['hand-tracking', 'anchors', 'hit-test', 'depth-sensing']
                 });
                 
-                videoRef.srcObject = streamRef;
-                videoRef.style.display = 'block';
-                canvasRef.style.display = 'none';
+                await onSessionStarted();
                 
-                startRefBtn.classList.add('hidden');
-                captureRefBtn.classList.remove('hidden');
-                
-                showStatus(statusRef, 'Caméra activée ! Cadrez le puzzle complet ou la boîte.', 'processing');
             } catch (error) {
-                showStatus(statusRef, 'Erreur : Impossible d\'accéder à la caméra.', 'error');
-                console.error('Erreur caméra:', error);
+                console.error('Erreur AR:', error);
+                statusDiv.textContent = '❌ Erreur: ' + error.message;
+                statusDiv.style.color = '#ff0080';
             }
         });
         
-        captureRefBtn.addEventListener('click', () => {
-            canvasRef.width = videoRef.videoWidth;
-            canvasRef.height = videoRef.videoHeight;
-            ctxRef.drawImage(videoRef, 0, 0);
-            
-            referenceImageData = ctxRef.getImageData(0, 0, canvasRef.width, canvasRef.height);
-            
-            videoRef.style.display = 'none';
-            canvasRef.style.display = 'block';
-            
-            captureRefBtn.classList.add('hidden');
-            confirmRefBtn.classList.remove('hidden');
-            
-            showStatus(statusRef, 'Photo capturée ! Vérifiez et confirmez.', 'processing');
-        });
-        
-        confirmRefBtn.addEventListener('click', () => {
-            if (streamRef) {
-                streamRef.getTracks().forEach(track => track.stop());
-            }
-            
-            step1.classList.add('completed');
-            step1.classList.remove('active');
-            step2.classList.add('active');
-            
-            referenceSection.classList.add('hidden');
-            piecesSection.classList.remove('hidden');
-            
-            showStatus(statusRef, 'Référence enregistrée ✓', 'processing');
-        });
-        
-        // ÉTAPE 2: Photo des pièces
-        startPiecesBtn.addEventListener('click', async () => {
-            try {
-                streamPieces = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
-                });
-                
-                videoPieces.srcObject = streamPieces;
-                videoPieces.style.display = 'block';
-                canvasPieces.style.display = 'none';
-                
-                startPiecesBtn.classList.add('hidden');
-                capturePiecesBtn.classList.remove('hidden');
-                
-                showStatus(statusPieces, 'Caméra activée ! Positionnez les pièces restantes.', 'processing');
-            } catch (error) {
-                showStatus(statusPieces, 'Erreur : Impossible d\'accéder à la caméra.', 'error');
-                console.error('Erreur caméra:', error);
-            }
-        });
-        
-        capturePiecesBtn.addEventListener('click', () => {
-            canvasPieces.width = videoPieces.videoWidth;
-            canvasPieces.height = videoPieces.videoHeight;
-            ctxPieces.drawImage(videoPieces, 0, 0);
-            
-            piecesImageData = ctxPieces.getImageData(0, 0, canvasPieces.width, canvasPieces.height);
-            
-            videoPieces.style.display = 'none';
-            canvasPieces.style.display = 'block';
-            
-            capturePiecesBtn.classList.add('hidden');
-            analyzePiecesBtn.classList.remove('hidden');
-            
-            showStatus(statusPieces, 'Pièces capturées ! Cliquez sur "Analyser".', 'processing');
-        });
-        
-        analyzePiecesBtn.addEventListener('click', () => {
-            analyzeAndMatch();
-        });
-        
-        // ÉTAPE 3: Analyse et suggestions
-        function analyzeAndMatch() {
-            if (streamPieces) {
-                streamPieces.getTracks().forEach(track => track.stop());
-            }
-            
-            showStatus(statusPieces, 'Analyse en cours...', 'processing');
-            statusPieces.innerHTML += '<div class="spinner"></div>';
-            
-            setTimeout(() => {
-                const suggestions = generatePlacementSuggestions();
-                displaySuggestions(suggestions);
-                
-                step2.classList.add('completed');
-                step2.classList.remove('active');
-                step3.classList.add('active');
-                
-                piecesSection.classList.add('hidden');
-                resultsSection.classList.remove('hidden');
-            }, 2500);
-        }
-        
-        function generatePlacementSuggestions() {
-            const refData = analyzeImage(referenceImageData);
-            const piecesData = analyzeImage(piecesImageData);
-            
-            const numPieces = Math.floor(Math.random() * 6) + 4; // 4-9 pièces
-            const suggestions = [];
-            
-            const positions = [
-                'Haut gauche', 'Haut centre', 'Haut droit',
-                'Centre gauche', 'Centre', 'Centre droit',
-                'Bas gauche', 'Bas centre', 'Bas droit'
-            ];
-            
-            const regions = [
-                'Ciel/fond', 'Zone claire', 'Zone sombre',
-                'Motif principal', 'Bordure', 'Coin'
-            ];
-            
-            for (let i = 0; i < numPieces; i++) {
-                const hue = Math.floor(Math.random() * 360);
-                const saturation = Math.floor(Math.random() * 50) + 30;
-                const lightness = Math.floor(Math.random() * 40) + 30;
-                
-                suggestions.push({
-                    number: i + 1,
-                    position: positions[Math.floor(Math.random() * positions.length)],
-                    region: regions[Math.floor(Math.random() * regions.length)],
-                    color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-                    confidence: Math.floor(Math.random() * 30) + 70, // 70-100%
-                    characteristics: generateCharacteristics()
-                });
-            }
-            
-            return suggestions;
-        }
-        
-        function generateCharacteristics() {
-            const types = ['Coin', 'Bord', 'Intérieur'];
-            const edges = ['2 bords droits', '1 bord droit', 'Aucun bord droit'];
-            const patterns = ['Uniforme', 'Dégradé', 'Détaillé', 'Texturé'];
-            
-            return {
-                type: types[Math.floor(Math.random() * types.length)],
-                edges: edges[Math.floor(Math.random() * edges.length)],
-                pattern: patterns[Math.floor(Math.random() * patterns.length)]
-            };
-        }
-        
-        function displaySuggestions(suggestions) {
-            const resultsDiv = document.getElementById('placementResults');
-            
-            let html = '<div class="placement-grid">';
-            
-            suggestions.forEach(piece => {
-                html += `
-                    <div class="piece-card">
-                        <div class="piece-number">
-                            <div class="piece-icon" style="background: ${piece.color};">🧩</div>
-                            Pièce ${piece.number}
-                        </div>
-                        <div class="piece-info">
-                            <strong>📍 Position suggérée :</strong><br>
-                            <span class="location-badge">${piece.position}</span>
-                            <br><br>
-                            <strong>🎨 Région :</strong> ${piece.region}<br>
-                            <strong>🔷 Type :</strong> ${piece.characteristics.type}<br>
-                            <strong>📐 Bords :</strong> ${piece.characteristics.edges}<br>
-                            <strong>🎭 Motif :</strong> ${piece.characteristics.pattern}
-                        </div>
-                        <div class="confidence-meter">
-                            <div class="confidence-fill" style="width: ${piece.confidence}%"></div>
-                        </div>
-                        <div style="text-align: right; margin-top: 5px; color: var(--primary); font-size: 0.8rem;">
-                            Confiance: ${piece.confidence}%
-                        </div>
-                    </div>
-                `;
+        async function onSessionStarted() {
+            // Configuration de la session
+            await gl.makeXRCompatible();
+            xrSession.updateRenderState({
+                baseLayer: new XRWebGLLayer(xrSession, gl)
             });
             
-            html += '</div>';
+            // Référence spatiale
+            xrRefSpace = await xrSession.requestReferenceSpace('local-floor');
             
-            html += `
-                <div class="info-box" style="margin-top: 30px;">
-                    <p><strong>💡 Conseils de placement :</strong></p>
-                    <p>• Commencez par les pièces avec la plus haute confiance</p>
-                    <p>• Les coins et bords sont plus faciles à placer</p>
-                    <p>• Regroupez les pièces par couleur similaire</p>
-                    <p>• Vérifiez les motifs et textures pour confirmer</p>
-                </div>
-            `;
+            // Masquer l'interface et afficher le canvas
+            container.classList.add('hidden');
+            canvas.classList.remove('hidden');
+            canvas.style.display = 'block';
             
-            resultsDiv.innerHTML = html;
+            // Générer des pièces de puzzle virtuelles
+            generatePuzzlePieces();
+            
+            // Démarrer la boucle de rendu
+            xrSession.requestAnimationFrame(onXRFrame);
+            
+            // Gérer la fin de session
+            xrSession.addEventListener('end', onSessionEnded);
         }
         
-        function analyzeImage(imageData) {
-            if (!imageData) return null;
+        function onSessionEnded() {
+            xrSession = null;
+            container.classList.remove('hidden');
+            canvas.classList.add('hidden');
+            statusDiv.textContent = 'Session AR terminée';
+        }
+        
+        function generatePuzzlePieces() {
+            const numPieces = 6;
+            pieces = [];
             
-            const data = imageData.data;
-            let totalR = 0, totalG = 0, totalB = 0;
+            for (let i = 0; i < numPieces; i++) {
+                const angle = (i / numPieces) * Math.PI * 2;
+                const radius = 0.5;
+                
+                pieces.push({
+                    id: i + 1,
+                    currentPos: [
+                        Math.cos(angle) * radius,
+                        0.3,
+                        -1 + Math.sin(angle) * radius
+                    ],
+                    targetPos: [
+                        Math.cos(angle + Math.PI) * radius * 0.5,
+                        0.3,
+                        -1.5 + Math.sin(angle + Math.PI) * radius * 0.5
+                    ],
+                    color: [
+                        Math.random(),
+                        0.5 + Math.random() * 0.5,
+                        0.5 + Math.random() * 0.5
+                    ]
+                });
+            }
+        }
+        
+        function onXRFrame(time, frame) {
+            const session = frame.session;
+            session.requestAnimationFrame(onXRFrame);
             
-            for (let i = 0; i < data.length; i += 4) {
-                totalR += data[i];
-                totalG += data[i + 1];
-                totalB += data[i + 2];
+            const pose = frame.getViewerPose(xrRefSpace);
+            if (!pose) return;
+            
+            const layer = session.renderState.baseLayer;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+            
+            // Couleur de fond transparente pour voir le passthrough
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            for (const view of pose.views) {
+                const viewport = layer.getViewport(view);
+                gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+                
+                // Dessiner les marqueurs de pièces
+                renderPuzzleMarkers(view);
+            }
+        }
+        
+        function renderPuzzleMarkers(view) {
+            // Programme shader simple
+            if (!gl.program) {
+                initShaders();
             }
             
-            const pixelCount = data.length / 4;
-            return {
-                avgR: Math.round(totalR / pixelCount),
-                avgG: Math.round(totalG / pixelCount),
-                avgB: Math.round(totalB / pixelCount)
-            };
+            gl.useProgram(gl.program);
+            
+            const projMatrix = view.projectionMatrix;
+            const viewMatrix = view.transform.inverse.matrix;
+            
+            // Dessiner chaque pièce
+            pieces.forEach((piece, index) => {
+                // Marqueur de position actuelle (sphère verte)
+                drawSphere(piece.currentPos, [0, 1, 0.5], 0.05, projMatrix, viewMatrix);
+                
+                // Marqueur de position cible (sphère rouge)
+                drawSphere(piece.targetPos, [1, 0, 0.5], 0.05, projMatrix, viewMatrix);
+                
+                // Ligne de connexion
+                drawLine(piece.currentPos, piece.targetPos, piece.color, projMatrix, viewMatrix);
+            });
         }
         
-        function showStatus(element, message, type = '') {
-            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        function initShaders() {
+            const vertexShaderSource = `
+                attribute vec3 position;
+                uniform mat4 projection;
+                uniform mat4 view;
+                uniform mat4 model;
+                
+                void main() {
+                    gl_Position = projection * view * model * vec4(position, 1.0);
+                    gl_PointSize = 20.0;
+                }
+            `;
+            
+            const fragmentShaderSource = `
+                precision mediump float;
+                uniform vec3 color;
+                
+                void main() {
+                    gl_FragColor = vec4(color, 0.8);
+                }
+            `;
+            
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader, vertexShaderSource);
+            gl.compileShader(vertexShader);
+            
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader, fragmentShaderSource);
+            gl.compileShader(fragmentShader);
+            
+            gl.program = gl.createProgram();
+            gl.attachShader(gl.program, vertexShader);
+            gl.attachShader(gl.program, fragmentShader);
+            gl.linkProgram(gl.program);
+            
+            // Créer un buffer pour les points
+            gl.buffer = gl.createBuffer();
         }
         
-        restartBtn.addEventListener('click', () => {
-            location.reload();
-        });
+        function drawSphere(position, color, radius, projMatrix, viewMatrix) {
+            if (!gl.program) return;
+            
+            gl.useProgram(gl.program);
+            
+            const posLoc = gl.getAttribLocation(gl.program, 'position');
+            const colorLoc = gl.getUniformLocation(gl.program, 'color');
+            const projLoc = gl.getUniformLocation(gl.program, 'projection');
+            const viewLoc = gl.getUniformLocation(gl.program, 'view');
+            const modelLoc = gl.getUniformLocation(gl.program, 'model');
+            
+            // Matrice modèle (translation)
+            const modelMatrix = new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                position[0], position[1], position[2], 1
+            ]);
+            
+            gl.uniformMatrix4fv(projLoc, false, projMatrix);
+            gl.uniformMatrix4fv(viewLoc, false, viewMatrix);
+            gl.uniformMatrix4fv(modelLoc, false, modelMatrix);
+            gl.uniform3fv(colorLoc, color);
+            
+            // Point unique au centre
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 0]), gl.STATIC_DRAW);
+            gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(posLoc);
+            
+            gl.drawArrays(gl.POINTS, 0, 1);
+        }
         
-        // Nettoyage
-        window.addEventListener('beforeunload', () => {
-            if (streamRef) streamRef.getTracks().forEach(track => track.stop());
-            if (streamPieces) streamPieces.getTracks().forEach(track => track.stop());
-        });
+        function drawLine(start, end, color, projMatrix, viewMatrix) {
+            if (!gl.program) return;
+            
+            gl.useProgram(gl.program);
+            
+            const posLoc = gl.getAttribLocation(gl.program, 'position');
+            const colorLoc = gl.getUniformLocation(gl.program, 'color');
+            const projLoc = gl.getUniformLocation(gl.program, 'projection');
+            const viewLoc = gl.getUniformLocation(gl.program, 'view');
+            const modelLoc = gl.getUniformLocation(gl.program, 'model');
+            
+            const identity = new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            ]);
+            
+            gl.uniformMatrix4fv(projLoc, false, projMatrix);
+            gl.uniformMatrix4fv(viewLoc, false, viewMatrix);
+            gl.uniformMatrix4fv(modelLoc, false, identity);
+            gl.uniform3fv(colorLoc, color);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                start[0], start[1], start[2],
+                end[0], end[1], end[2]
+            ]), gl.STATIC_DRAW);
+            
+            gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(posLoc);
+            
+            gl.drawArrays(gl.LINES, 0, 2);
+        }
     </script>
 </body>
 </html>
